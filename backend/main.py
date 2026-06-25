@@ -90,19 +90,33 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
 # --- EXPERT SYSTEM PROMPT ---
+# --- UPGRADED EMOTION PROMPT ---
 SYSTEM_PROMPT = """
-You are the EchoMind Emotional Parser Engine. Analyze the journal text and return a valid JSON object ONLY.
-Do not use markdown blocks or formatting wrappers.
+You are the EchoMind Advanced Emotional Analytics Engine. Analyze the journal text and extract granular emotional metrics.
+You must return a valid JSON object ONLY. Do not wrap it in markdown code blocks or any prose text.
 
 Template:
 {
   "overall_sentiment": "Positive" | "Negative" | "Neutral",
   "confidence_score": 0.85, 
-  "emotions": { "joy": 0.0, "anxiety": 0.0, "sadness": 0.0, "anger": 0.0, "serenity": 0.0 },
+  "emotions": { 
+    "joy": 0.0, 
+    "anxiety": 0.0, 
+    "stress": 0.0, 
+    "anger": 0.0, 
+    "fear": 0.0, 
+    "confidence": 0.0, 
+    "excitement": 0.0, 
+    "loneliness": 0.0, 
+    "gratitude": 0.0 
+  },
   "themes": ["string"],
-  "summary": "1 sentence breakdown."
+  "summary": "1 sentence psychological breakdown reflection."
 }
-Scale emotions and confidence between 0.0 and 1.0.
+
+CRITICAL RULES:
+1. Every single emotion field in the dictionary must be assigned a float value between 0.0 (completely absent) and 1.0 (extremely intense).
+2. Base the scores directly on linguistic cues, tone, and implied psychological strain or balance within the text.
 """
 
 # --- ROUTERS: AUTHENTICATION PIPELINE ---

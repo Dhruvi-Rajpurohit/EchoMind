@@ -137,7 +137,13 @@ export default function App() {
     date: new Date(item.created_at).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', month: 'short', day: 'numeric' }),
     Joy: item.analysis?.emotions?.joy || 0,
     Anxiety: item.analysis?.emotions?.anxiety || 0,
-    Serenity: item.analysis?.emotions?.serenity || 0,
+    Stress: item.analysis?.emotions?.stress || 0,
+    Anger: item.analysis?.emotions?.anger || 0,
+    Fear: item.analysis?.emotions?.fear || 0,
+    Confidence: item.analysis?.emotions?.confidence || 0,
+    Excitement: item.analysis?.emotions?.excitement || 0,
+    Loneliness: item.analysis?.emotions?.loneliness || 0,
+    Gratitude: item.analysis?.emotions?.gratitude || 0,
   }));
 
   const getSentimentStyle = (sentiment) => {
@@ -239,9 +245,11 @@ export default function App() {
                   <YAxis domain={[0, 1]} tick={{ fill: '#94a3b8', fontSize: 12 }} />
                   <Tooltip />
                   <Legend wrapperStyle={{ paddingTop: '12px', fontSize: '12px' }} />
-                  <Line type="monotone" dataKey="Joy" stroke="#eab308" strokeWidth={3} />
-                  <Line type="monotone" dataKey="Anxiety" stroke="#a855f7" strokeWidth={3} />
-                  <Line type="monotone" dataKey="Serenity" stroke="#10b981" strokeWidth={3} />
+                  <Line type="monotone" dataKey="Joy" stroke="#eab308" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Anxiety" stroke="#a855f7" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Stress" stroke="#f97316" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Confidence" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                  <Line type="monotone" dataKey="Gratitude" stroke="#ec4899" strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
