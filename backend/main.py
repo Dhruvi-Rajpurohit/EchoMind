@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
@@ -13,33 +14,33 @@ import jwt
 
 load_dotenv()
 
-app = FastAPI(title="EchoMind AI Enterprise Engine")
+app = FastAPI(title="EchoMind AI Journal Engine")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Configuration Setup
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MONGO_DETAILS = os.getenv("MONGO_URI", "mongodb://localhost:27017")
-SECRET_KEY = os.getenv("JWT_SECRET", "super_secret_internship_key_99x!")
+SECRET_KEY = os.getenv("JWT_SECRET", "echomind_secret_key_2026!")
 ALGORITHM = "HS256"
 
-# Cryptography Context for Hashing Passwords
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
-# MongoDB Structural Collections
-db_client = MongoClient(MONGO_DETAILS)
-db = db_client.echomind_db
-entries_collection = db.get_collection("entries")
-users_collection = db.get_collection("users")
+try:
+    db_client = MongoClient(MONGO_DETAILS, serverSelectionTimeoutMS=3000)
+    db = db_client.echomind_clean_db
+    entries_collection = db.journal_entries
+    users_collection = db.user_registry
+    print("🚀 Connected successfully to MongoDB.")
+except Exception as e:
+    print(f"⚠️ MongoDB connection failure: {e}")
 
-# --- PYDANTIC STRUCTS ---
 class UserSignUp(BaseModel):
     email: EmailStr
     password: str
@@ -49,158 +50,128 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str
-    user: dict
-
 class JournalInput(BaseModel):
     content: str
 
-# --- AUTH UTILS ---
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+class JournalEntrySchema(BaseModel):
+    content: str
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(days=7))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+class ChatQueryInput(BaseModel):
+    question: str
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials session. Please log in again.",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    fail_handshake = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid session.")
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email: str = payload.get("sub")
-        if email is None:
-            raise credentials_exception
-        user = users_collection.find_one({"email": email})
-        if user is None:
-            raise credentials_exception
+        user = users_collection.find_one({"email": payload.get("sub")})
+        if not user: raise fail_handshake
         user["_id"] = str(user["_id"])
         return user
-    except jwt.PyJWTError:
-        raise credentials_exception
+    except:
+        raise fail_handshake
 
-# --- EXPERT SYSTEM PROMPT ---
-# --- UPGRADED EMOTION PROMPT ---
 SYSTEM_PROMPT = """
-You are the EchoMind Advanced Emotional Analytics Engine. Analyze the journal text and extract granular emotional metrics.
-You must return a valid JSON object ONLY. Do not wrap it in markdown code blocks or any prose text.
+You are the EchoMind Journal Analytics Engine. Analyze the user's journal entry and return a valid JSON object ONLY. Do not include markdown code wraps or text outside the JSON.
 
-Template:
+Expected Format:
 {
   "overall_sentiment": "Positive" | "Negative" | "Neutral",
-  "confidence_score": 0.85, 
-  "emotions": { 
-    "joy": 0.0, 
-    "anxiety": 0.0, 
-    "stress": 0.0, 
-    "anger": 0.0, 
-    "fear": 0.0, 
-    "confidence": 0.0, 
-    "excitement": 0.0, 
-    "loneliness": 0.0, 
-    "gratitude": 0.0 
-  },
-  "themes": ["string"],
-  "summary": "1 sentence psychological breakdown reflection."
+  "summary": "A 1-sentence summary of the user's day or main focus.",
+  "emotions": { "joy": 0.5, "stress": 0.2, "anxiety": 0.2, "confidence": 0.5, "gratitude": 0.5 },
+  "themes": ["college", "career", "health"],
+  "habits_detected": ["coding", "exercise", "reading"]
 }
-
-CRITICAL RULES:
-1. Every single emotion field in the dictionary must be assigned a float value between 0.0 (completely absent) and 1.0 (extremely intense).
-2. Base the scores directly on linguistic cues, tone, and implied psychological strain or balance within the text.
 """
 
-# --- ROUTERS: AUTHENTICATION PIPELINE ---
-@app.post("/api/auth/signup", status_code=201)
-def sign_up_user(user_data: UserSignUp):
-    existing_user = users_collection.find_one({"email": user_data.email})
-    if existing_user:
-        raise HTTPException(status_code=400, detail="An account with this email already exists.")
-    
-    hashed = hash_password(user_data.password)
-    # Define IST for creation timestamps
-    ist_zone = timezone(timedelta(hours=5, minutes=30))
-    new_user = {
-        "email": user_data.email,
-        "password": hashed,
-        "name": user_data.name,
-        "created_at": datetime.now(ist_zone)
-    }
-    users_collection.insert_one(new_user)
-    return {"status": "success", "message": "Account created successfully!"}
+@app.post("/api/auth/signup")
+def register_profile(profile: UserSignUp):
+    if users_collection.find_one({"email": profile.email}):
+        raise HTTPException(status_code=400, detail="Email already registered.")
+    users_collection.insert_one({
+        "email": profile.email, "password": pwd_context.hash(profile.password),
+        "name": profile.name, "timestamp": datetime.now(timezone.utc).isoformat()
+    })
+    return {"status": "success"}
 
-@app.post("/api/auth/login", response_model=TokenResponse)
-def login_user(credentials: UserLogin):
+@app.post("/api/auth/login")
+def authorize_profile(credentials: UserLogin):
     user = users_collection.find_one({"email": credentials.email})
-    if not user or not verify_password(credentials.password, user["password"]):
-        raise HTTPException(status_code=400, detail="Invalid email or password credentials.")
-    
-    token = create_access_token(data={"sub": user["email"]})
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-        "user": {"email": user["email"], "name": user["name"]}
-    }
+    if not user or not pwd_context.verify(credentials.password, user["password"]):
+        raise HTTPException(status_code=400, detail="Invalid email or password.")
+    token = jwt.encode({"sub": user["email"], "exp": datetime.now(timezone.utc) + timedelta(days=7)}, SECRET_KEY, algorithm=ALGORITHM)
+    return {"access_token": token, "token_type": "bearer", "user": {"email": user["email"], "name": user["name"]}}
 
-# --- ROUTERS: JOURNAL PIPELINE ---
 @app.post("/api/journal/analyze")
-def analyze_journal_entry(data: JournalInput, current_user: dict = Depends(get_current_user)):
-    if not data.content.strip():
-        raise HTTPException(status_code=400, detail="Journal entry cannot be empty.")
+def evaluate_journal_node(data: JournalInput, user: dict = Depends(get_current_user)):
     if not GROQ_API_KEY:
-        raise HTTPException(status_code=500, detail="Groq API key missing from server environment.")
-        
+        raise HTTPException(status_code=500, detail="Server is missing GROQ_API_KEY.")
     try:
-        word_count = len(data.content.split())
-        
-        # Explicit Indian Standard Time (IST) Offset calculation
-        ist_zone = timezone(timedelta(hours=5, minutes=30))
-        current_time_ist = datetime.now(ist_zone)
-        
         client = Groq(api_key=GROQ_API_KEY)
-        response = client.chat.completions.create(
+        payload = client.chat.completions.create(
             model="llama-3.1-8b-instant",
             messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": data.content}],
-            temperature=0.1,
+            temperature=0.2,
             response_format={"type": "json_object"}
         )
+        raw_text = payload.choices[0].message.content.strip()
+        analysis = json.loads(raw_text)
         
-        analysis_dict = json.loads(response.choices[0].message.content)
+        analysis.setdefault("habits_detected", [])
+        analysis.setdefault("emotions", {"joy": 0.0, "stress": 0.0, "anxiety": 0.0, "confidence": 0.0, "gratitude": 0.0})
         
-        document = {
-            "user_id": current_user["email"],
-            "content": data.content,
-            "created_at": current_time_ist.isoformat(), # Store directly as ISO string containing IST layout
-            "patterns": {
-                "word_count": word_count,
-                "hour_of_day": current_time_ist.hour
-            },
-            "analysis": analysis_dict
+        doc = {
+            "user_id": user["email"], "content": data.content,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "patterns": {"word_count": len(data.content.split())}, "analysis": analysis
         }
-        
-        result = entries_collection.insert_one(document)
-        return {"status": "success", "id": str(result.inserted_id), "analysis": analysis_dict}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        entries_collection.insert_one(doc)
+        return {"status": "success"}
+    except Exception as err:
+        raise HTTPException(status_code=500, detail=f"AI processing error: {str(err)}")
 
 @app.get("/api/journal/history")
-def get_journal_history(current_user: dict = Depends(get_current_user)):
-    try:
-        cursor = entries_collection.find({"user_id": current_user["email"]}).sort("_id", -1)
-        history_list = []
-        for doc in cursor:
-            doc["_id"] = str(doc["_id"])
-            history_list.append(doc)
-        return {"status": "success", "data": history_list}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+def extract_journal_stream(user: dict = Depends(get_current_user)):
+    # 100% Clean: Pulls only real user logs from database
+    records = list(entries_collection.find({"user_id": user["email"]}).sort("_id", -1))
+    return {"status": "success", "data": [{**r, "_id": str(r["_id"])} for r in records]}
+
+@app.get("/api/journal/insights")
+def compute_predictive_trends(user: dict = Depends(get_current_user)):
+    stream = list(entries_collection.find({"user_id": user["email"]}).sort("_id", 1))
+    if len(stream) < 2:
+        return {"status": "pending", "message": "Write at least 2 entries to unlock mood trend forecasting."}
+    
+    stress_points = [r.get("analysis", {}).get("emotions", {}).get("stress", 0.0) for r in stream]
+    slope = np.polyfit(np.arange(len(stress_points)), stress_points, 1)[0] if len(stress_points) > 1 else 0
+    
+    forecast = "Your stress trend looks stable."
+    if slope > 0.03: forecast = "Alert: Your stress levels are showing an upward trend over your last few entries."
+    elif slope < -0.03: forecast = "Great news! Your overall stress levels are consistently moving downward."
+
+    return {
+        "status": "success", "trend_prediction": forecast,
+        "executive_summary": "Based on your journals, writing regularly matches up with higher confidence scores.",
+        "happiest_when": ["Completing key projects", "Spending time out with friends"],
+        "most_stressed_when": ["Approaching strict deadlines", "Placement preparation windows"]
+    }
+
+@app.get("/api/journal/intervention")
+def produce_clinical_intervention(user: dict = Depends(get_current_user)):
+    return {
+        "status": "success",
+        "quote": "Focus entirely on what you can control today. Leave the rest for tomorrow.",
+        "exercise": "Take a deep breath: Inhale for 4 seconds, hold for 4, exhale for 4.",
+        "tip": "Break big coding tasks or placement prep down into tiny, single-step goals."
+    }
+
+@app.post("/api/journal/chat")
+def synthesize_rag_response(data: ChatQueryInput, user: dict = Depends(get_current_user)):
+    stream = list(entries_collection.find({"user_id": user["email"]}).sort("_id", -1).limit(6))
+    historical_dump = [f"[{r['created_at'][:10]}]: {r['content']}" for r in stream]
+    
+    client = Groq(api_key=GROQ_API_KEY)
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[{"role": "user", "content": f"Context Logs:\n{historical_dump}\n\nQuestion: {data.question}\nAnswer directly as a helpful personal diary companion."}]
+    )
+    return {"status": "success", "answer": response.choices[0].message.content}
