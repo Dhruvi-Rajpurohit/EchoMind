@@ -143,7 +143,7 @@ export default function App() {
   const getSentimentStyle = (sentiment) => {
     if (sentiment === 'Positive') return { bg: '#dcfce7', text: '#15803d' };
     if (sentiment === 'Negative') return { bg: '#fee2e2', text: '#b91c1c' };
-    return { bg: '#e2e8f0', text: '#475569' }; // Styled beautifully for Neutral
+    return { bg: '#f1f5f9', text: '#475569', border: '1px solid #cbd5e1' };
   };
 
   if (!token) {
