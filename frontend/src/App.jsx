@@ -162,60 +162,31 @@ export default function App() {
     treeHeader: darkMode ? '#334155' : '#f1f5f9'
   };
   
-  // 🤖 1. MOOD-BASED ADAPTATION LOGIC ENGINE
-  const getMoodAdaptiveStyles = () => {
-    if (history.length === 0) {
-      return {
-        bgGradient: 'linear-gradient(135deg, #4f46e5, #6366f1)',
-        shadow: '0 10px 25px -5px rgba(99, 102, 241, 0.4)',
-        label: 'ACTIVE ENGINE',
-        badgeColor: '#4f46e5'
-      };
-    }
-    const latest = history[0]?.analysis?.emotions || {};
-    const joy = latest.joy || 0;
-    const stress = latest.stress || 0;
-    const anxiety = latest.anxiety || 0;
-    const confidence = latest.confidence || 0;
+  
+  // 📂 4. TIMELINE LOG WRITING AND MODIFICATION CONTROL MUTATORS
+  const handleDeleteLog = async (logId) => {
+    if (!window.confirm("Are you sure you want to completely delete this entry? This action cannot be undone.")) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/journal/entry/${logId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) await syncDashboardData(token);
+    } catch { setError("Error trying to process entry deletion."); }
+  };
 
-    const maxVal = Math.max(joy, stress, anxiety, confidence);
-
-    if (maxVal < 0.25) {
-      return {
-        bgGradient: 'linear-gradient(135deg, #475569, #64748b)',
-        shadow: '0 10px 25px -5px rgba(71, 85, 105, 0.4)',
-        label: 'NEUTRAL STATE VECTORS',
-        badgeColor: '#475569'
-      };
-    } else if (maxVal === stress) {
-      return {
-        bgGradient: 'linear-gradient(135deg, #b91c1c, #ef4444)',
-        shadow: '0 10px 25px -5px rgba(239, 68, 68, 0.5)',
-        label: 'HIGH STRESS RECOVERY ACTIVATED',
-        badgeColor: '#b91c1c'
-      };
-    } else if (maxVal === anxiety) {
-      return {
-        bgGradient: 'linear-gradient(135deg, #6b21a8, #a855f7)',
-        shadow: '0 10px 25px -5px rgba(168, 85, 247, 0.5)',
-        label: 'ANXIETY BUFFERING PROFILE',
-        badgeColor: '#6b21a8'
-      };
-    } else if (maxVal === joy) {
-      return {
-        bgGradient: 'linear-gradient(135deg, #ca8a04, #eab308)',
-        shadow: '0 10px 25px -5px rgba(234, 179, 8, 0.5)',
-        label: 'ELEVATED JOY SENTIMENT',
-        badgeColor: '#ca8a04'
-      };
-    } else {
-      return {
-        bgGradient: 'linear-gradient(135deg, #0369a1, #0ea5e9)',
-        shadow: '0 10px 25px -5px rgba(14, 165, 233, 0.5)',
-        label: 'HIGH FOCUS & CONFIDENCE',
-        badgeColor: '#0369a1'
-      };
-    }
+  const handleUpdateLog = async (logId) => {
+    if (!editingContent.trim()) return;
+    setEditLoading(true);
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/journal/entry/${logId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ content: editingContent })
+      });
+      if (res.ok) { setEditingLogId(null); await syncDashboardData(token); }
+    } catch { setError("Network error encountered during entry save."); }
+    finally { setEditLoading(false); }
   };
 
   if (!token) {
