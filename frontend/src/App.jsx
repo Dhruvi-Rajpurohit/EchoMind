@@ -161,41 +161,26 @@ export default function App() {
     accentLight: 'rgba(99, 102, 241, 0.15)',
     treeHeader: darkMode ? '#334155' : '#f1f5f9'
   };
-  // 🤖 2. SMART AI ROUTINE COACHING GENERATOR
-  const getAICoachingAlert = () => {
-    if (history.length === 0) return null;
-    const recentLogs = history.slice(0, 5);
-    
-    let checks = { coding: false, exercise: false, reading: false };
-    recentLogs.forEach(entry => {
-      const list = entry?.analysis?.habits_detected || [];
-      if (list.includes('coding')) checks.coding = true;
-      if (list.includes('exercise')) checks.exercise = true;
-      if (list.includes('reading')) checks.reading = true;
-    });
-
-    if (!checks.coding) {
+  
+  // 📂 3. ANALYTICS REPORT CORRELATION MATRIX ENGINE
+  const computeAnalyticsReport = () => {
+    const triggerWords = ['placement', 'exam', 'interview', 'coding', 'project', 'bug', 'sleep', 'family', 'friend'];
+    return triggerWords.map(word => {
+      let count = 0, totalStress = 0, totalJoy = 0;
+      history.forEach(entry => {
+        if (entry.content?.toLowerCase().includes(word)) {
+          count++;
+          totalStress += (entry.analysis?.emotions?.stress || 0);
+          totalJoy += (entry.analysis?.emotions?.joy || 0);
+        }
+      });
       return {
-        target: 'Coding',
-        advice: "You haven't logged programming tasks in your recent logs. Re-engaging with daily logic builds triggers a 15% upward push to your average placement confidence curves."
+        trigger: word.toUpperCase(),
+        mentions: count,
+        avgStress: count > 0 ? parseFloat((totalStress / count).toFixed(2)) : 0,
+        avgJoy: count > 0 ? parseFloat((totalJoy / count).toFixed(2)) : 0,
       };
-    }
-    if (!checks.exercise) {
-      return {
-        target: 'Exercise',
-        advice: "Physical movement metrics have dropped off. Historical analysis shows your cumulative stress scores decrease significantly on days when physical activities are logged."
-      };
-    }
-    if (!checks.reading) {
-      return {
-        target: 'Reading',
-        advice: "Consistent cognitive study inputs appear stalled. Consider reading just 10-15 minutes tonight to balance placement performance anxiety indicators."
-      };
-    }
-    return {
-      target: 'Routine Perfected',
-      advice: "Your mental inputs and actionable routines are currently fully aligned. Continue maintaining this healthy multi-habit execution lifecycle!"
-    };
+    }).filter(item => item.mentions > 0);
   };
 
   if (!token) {
