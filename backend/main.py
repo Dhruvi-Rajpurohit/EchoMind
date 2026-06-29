@@ -34,9 +34,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/login")
 
 try:
     db_client = MongoClient(MONGO_DETAILS, serverSelectionTimeoutMS=3000)
-    db = db_client.echomind_clean_db
-    entries_collection = db.journal_entries
-    users_collection = db.user_registry
+    db = db_client["echomind"]
+    entries_collection = db["journal_entries"]
+    users_collection = db["user_registry"]
     print("🚀 Connected successfully to MongoDB.")
 except Exception as e:
     print(f"⚠️ MongoDB connection failure: {e}")
