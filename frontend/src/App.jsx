@@ -26,7 +26,7 @@ export default function App() {
   const [chatLoading, setChatLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Editing state for timeline logs
+  // Editing states for timeline logs
   const [editingLogId, setEditingLogId] = useState(null);
   const [editingContent, setEditingContent] = useState('');
   const [editLoading, setEditLoading] = useState(false);
@@ -166,7 +166,7 @@ export default function App() {
     }
   };
 
-  // 🤖 DYNAMIC UI MOOD ADAPTATION ALGORITHM
+  // 1. MOOD-BASED ADAPTATION LOGIC ENGINE
   const getMoodAdaptiveStyles = () => {
     if (history.length === 0) {
       return {
@@ -222,7 +222,7 @@ export default function App() {
     }
   };
 
-  // 🤖 SMART AI HABIT COACHING GENERATOR 
+  // SMART AI ROUTINE COACHING GENERATOR
   const getAICoachingAlert = () => {
     if (history.length === 0) return null;
     const recentLogs = history.slice(0, 5);
@@ -270,7 +270,7 @@ export default function App() {
     return matrix;
   })();
 
-  // 📂 CORE FEATURE ENHANCEMENT: TRIGGER KEYWORD CORRELATIONS & ANALYTICS COMPUTATION
+  // ANALYTICS REPORT CORRELATION MATRIX ENGINE
   const computeAnalyticsReport = () => {
     const triggerWords = ['placement', 'exam', 'interview', 'coding', 'project', 'bug', 'sleep', 'family', 'friend'];
     const summaryMatrix = triggerWords.map(word => {
@@ -385,7 +385,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', width: '100vw', backgroundColor: colors.bg, color: colors.text, fontFamily: 'sans-serif', display: 'flex', transition: 'background-color 0.2s, color 0.2s', margin: 0, padding: 0, overflowX: 'hidden' }}>
       
-      {/* SIDEBAR */}
+      
       <aside style={{ width: '280px', minWidth: '280px', backgroundColor: colors.sidebar, borderRight: `1px solid ${colors.border}`, padding: '32px 24px', display: 'flex', flexDirection: 'column', gap: '32px', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ background: 'linear-gradient(135deg, #6366f1, #4f46e5)', padding: '10px', borderRadius: '12px', color: '#fff' }}><PenTool size={22} /></div>
@@ -395,13 +395,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* RECONSTRUCTED APP MODAL TABS */}
+        
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button 
             onClick={() => setActiveTab('dashboard')} 
             style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '12px', padding: '14px', background: activeTab === 'dashboard' ? colors.accentLight : 'transparent', color: activeTab === 'dashboard' ? colors.accent : colors.text, border: 'none', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s' }}
           >
-            <Cpu size={18} /> Engine Dashboard
+            <Cpu size={18} /> Dashboard Mode
           </button>
           <button 
             onClick={() => setActiveTab('analytics')} 
@@ -454,7 +454,6 @@ export default function App() {
 
         {error && <div style={{ backgroundColor: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#f87171', padding: '16px', borderRadius: '16px', width: '100%', boxSizing: 'border-box' }}>⚠️ {error}</div>}
 
-        {/* 🤖 FEATURE 2 EMBEDDED: MOOD-ADAPTIVE CORE ENGINE BANNER */}
         <section style={{ background: adaptiveStyles.bgGradient, padding: '28px', borderRadius: '24px', color: '#ffffff', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: adaptiveStyles.shadow, transition: 'all 0.4s ease' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -503,7 +502,6 @@ export default function App() {
           </div>
         </section>
 
-        {/* 🤖 FEATURE 2 EMBEDDED: AI HABIT COACHING ALERTS BOX */}
         {coachingAlert && history.length > 0 && (
           <div style={{ background: darkMode ? 'rgba(99,102,241,0.06)' : 'rgba(99,102,241,0.03)', border: `1px solid ${colors.border}`, borderLeft: `5px solid ${colors.accent}`, padding: '20px 24px', borderRadius: '16px', display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
             <AlertCircle size={22} color={colors.accent} style={{ marginTop: '2px', flexShrink: 0 }} />
@@ -558,7 +556,7 @@ export default function App() {
                         <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '12px' }} />
                         <Line type="monotone" dataKey="Joy" stroke="#eab308" strokeWidth={3} dot={true} />
                         <Line type="monotone" dataKey="Stress" stroke="#ef4444" strokeWidth={3} dot={true} />
-                        <Line type="monotone" dataKey="Anxiety" stroke="#a855f7" strokeWidth={3} dot={dot => true} />
+                        <Line type="monotone" dataKey="Anxiety" stroke="#a855f7" strokeWidth={3} dot={true} />
                         <Line type="monotone" dataKey="Confidence" stroke="#0ea5e9" strokeWidth={3} dot={true} />
                       </LineChart>
                     </ResponsiveContainer>
@@ -567,7 +565,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* HABIT TRACKER VISUAL COUNTERS DISPLAY */}
+            {/* HABIT TRACKER DISPLAY VISUAL COUNTERS */}
             <div style={{ background: colors.card, border: `1px solid ${colors.border}`, padding: '32px', borderRadius: '24px', display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
                 <Flame size={22} color="#ef4444" style={{ flexShrink: 0 }} />
@@ -590,7 +588,7 @@ export default function App() {
             </div>
           </>
         ) : (
-          /* 📂 FEATURE 1 EMBEDDED: ADVANCED JOURNAL ANALYTICS MODE VIEW */
+         
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', width: '100%' }}>
             <div style={{ background: colors.card, border: `1px solid ${colors.border}`, padding: '32px', borderRadius: '24px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
@@ -629,7 +627,7 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Bar Chart Representation */}
+                
                   <div style={{ background: colors.inputBg, borderRadius: '16px', padding: '24px', minHeight: '300px', border: `1px solid ${colors.border}` }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={correlationReport}>
@@ -649,7 +647,7 @@ export default function App() {
           </div>
         )}
 
-        {/* 📂 FEATURE 1 EMBEDDED: ACCORDION ARCHIVE TREE INCORPORATING EDIT AND DELETE ACTIONS */}
+     
         <div style={{ background: colors.card, border: `1px solid ${colors.border}`, padding: '32px', borderRadius: '24px', width: '100%', boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', borderBottom: `1px solid ${colors.border}`, paddingBottom: '16px' }}>
             <Calendar size={22} color={colors.textMuted} />
@@ -711,7 +709,7 @@ export default function App() {
                                             <FileText size={12} /> Log Entry #{idx + 1}
                                           </span>
                                           
-                                          {/* INTERACTIVE ROW CONTROLS FOR MODIFICATIONS */}
+                                          {/* INTERACTIVE CONTROLS FOR MODIFICATIONS */}
                                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <span style={{ background: badgeBg, padding: '2px 8px', borderRadius: '6px', color: badgeColor, fontSize: '10px', fontWeight: '800' }}>
                                               {score?.toUpperCase()}
@@ -731,7 +729,7 @@ export default function App() {
                                           </div>
                                         </div>
 
-                                        {/* CONDITIONAL LOG EDITOR CONDITIONAL BOX */}
+                                        {/* LOG EDITOR TEXTAREA CONTENT BOX */}
                                         {isCurrentlyEditing ? (
                                           <textarea 
                                             value={editingContent} 
